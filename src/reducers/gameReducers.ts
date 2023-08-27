@@ -14,6 +14,7 @@ export const initialState: GameState = {
         name: '',
         startedHand: [],
         myHandsDuringGame: [],
+        contractPlayed: [],
         socketId: '',
         score: 0,
         isReady: false,
@@ -32,6 +33,7 @@ export interface Player {
     name: string;
     startedHand: [],
     myHandsDuringGame: [],
+    contractPlayed: [],
     socketId: string;
     score: number;
     isReady: boolean;
@@ -87,6 +89,7 @@ export const gameReducers = (state: GameState, action: Action): GameState => {
                 name: action.payload.name,
                 startedHand: action.payload.startedHand,
                 myHandsDuringGame: action.payload.myHandsDuringGame,
+                contractPlayed: action.payload.contractPlayed,
                 socketId: action.payload.socketId,
                 score: action.payload.score,
                 isReady: action.payload.isReady,

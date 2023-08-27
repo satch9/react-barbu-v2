@@ -12,7 +12,6 @@ export class ServerSocket {
     public io: ServerSocketIo;
 
     public users: { [uid: string]: string };
-    public randomCurrentPlayer: () => number;
     public deck: Deck;
     public contracts: Contract[];
 
@@ -36,10 +35,6 @@ export class ServerSocket {
 
         this.users = {};
 
-        /** Fonction randomCurrentPlayer pour le jeu du barbu avec 4 joueurs */
-        this.randomCurrentPlayer = (): number => {
-            return Math.floor(Math.random() * 4) + 1;
-        };
 
         this.contracts = Contracts.CONTRACTS;
 
@@ -57,7 +52,7 @@ export class ServerSocket {
                 isDisconnected: false,
             },
             winner: null,
-            contracts: [],
+            contracts: [], // mettre les contrats ici
             currentContract: null,
         };
 
@@ -81,7 +76,9 @@ export class ServerSocket {
         return result;
     }
 
-
+    randomCurrentPlayer(): number {
+        return Math.floor(Math.random() * 4) + 1;
+    }
 
     StartListeners(socket: Socket) {
 
@@ -151,6 +148,7 @@ export class ServerSocket {
                     name: pseudo,
                     startedHand: [],
                     myHandsDuringGame: [],
+                    contractPlayed: [],
                     socketId: socketId,
                     score: 0,
                     isReady: true,
@@ -172,6 +170,7 @@ export class ServerSocket {
                 name: pseudo,
                 startedHand: [],
                 myHandsDuringGame: [],
+                contractPlayed: [],
                 socketId: socketId,
                 score: 0,
                 isReady: true,
@@ -195,6 +194,7 @@ export class ServerSocket {
                         name: pseudo,
                         startedHand: [],
                         myHandsDuringGame: [],
+                        contractPlayed: [],
                         socketId: socketId,
                         score: 0,
                         isReady: true,
@@ -210,6 +210,7 @@ export class ServerSocket {
                 name: pseudo,
                 startedHand: [],
                 myHandsDuringGame: [],
+                contractPlayed: [],
                 socketId: socketId,
                 score: 0,
                 isReady: true,
@@ -261,11 +262,71 @@ export class ServerSocket {
             });
 
             this.gameState.contracts = this.contracts;
+            this.gameState.currentPlayer = this.gameState.players[this.randomCurrentPlayer() - 1];
 
             this.io.emit('gameState', this.gameState);
             this.io.emit('roomsState', this.roomsState);
             this.io.emit('gameStarted', true);
         });
+
+        socket.on('contract_choice', (index, playerContractChose) => {
+            console.log(`Contract choice received from => contract: ${index}`);
+
+            const contractChosen: Contract = this.gameState.contracts[index];
+            this.gameState.currentContract = contractChosen;
+
+            this.gameState.players.forEach((player) => {
+                if (player.name === playerContractChose.name) {
+                    player.contractPlayed?.push(contractChosen);
+                }
+            });
+
+            this.roomsState.rooms.forEach((room) => {
+                room.currentContract = contractChosen;
+                room.players.forEach((player) => {
+                    player.contractPlayed?.push(contractChosen);
+                });
+            });
+
+            this.io.emit('gameState', this.gameState);
+            this.io.emit('roomsState', this.roomsState);
+            this.io.emit('contractChosen', contractChosen);
+
+        })
+
+        // Exemple de mise à jour dans socket.on('card_played')
+        socket.on('card_played', (card, playerCardClicked) => {
+            const newGameState = { ...this.gameState };
+            const newRoomsState = { ...this.roomsState };
+
+            newGameState.players = newGameState.players.map((player) => {
+                if (player.name === playerCardClicked.name) {
+                    const newPlayer = { ...player };
+                    newPlayer.myHandsDuringGame = [...newPlayer.myHandsDuringGame, card];
+                    newPlayer.startedHand = newPlayer.startedHand.filter((cardInHand) => cardInHand !== card);
+                    return newPlayer;
+                }
+                return player;
+            });
+
+            newRoomsState.rooms = newRoomsState.rooms.map((room) => {
+                const newRoom = { ...room };
+                newRoom.players = newRoom.players.map((player) => {
+                    if (player.name === playerCardClicked.name) {
+                        const newPlayer = { ...player };
+                        newPlayer.myHandsDuringGame = [...newPlayer.myHandsDuringGame, card];
+                        newPlayer.startedHand = newPlayer.startedHand.filter((cardInHand) => cardInHand !== card);
+                        return newPlayer;
+                    }
+                    return player;
+                });
+                return newRoom;
+            });
+
+            this.io.emit('gameState', newGameState);
+            this.io.emit('roomsState', newRoomsState);
+        });
+
 
         socket.on('disconnect', () => {
             console.info(`User disconnected: ${socket.id}`);

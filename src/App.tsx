@@ -93,6 +93,7 @@ const App = () => {
       setGameStarted(started);
     })
 
+
   }
 
   const SendHandshake = () => {
@@ -117,12 +118,6 @@ const App = () => {
         {
           gameStarted ? <Board roomsState={RoomsStateReducer} gameState={GameStateReducer} socketState={SocketState} /> : <ListOfGames socketState={SocketState} roomsState={RoomsStateReducer} setGameStarted={setGameStarted} />
         }
-
-
-
-
-
-
 
         <p className="messageError">{messageError && messageError}</p>
         <div className='global'>

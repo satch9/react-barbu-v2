@@ -254,15 +254,82 @@ tr:nth-child(even) {
     background-color: #e0e0e0;
 }
 
-.board {
+.board-container {
     background-color: darkgreen;
-    width: 100vw;
-    height: 90vh;
+    width: 100%;
+    height: 100vh;
 }
 
 .board-area-play {
-    height: 50%
+    height: 55%
 }
+
+/* Styles pour mobile */
+.board-container.mobile {
+    height: 200px;
+    width: 100%;
+}
+
+/* Styles pour bureau (desktop) */
+.board-container.desktop {
+    width: 70%;
+}
+
+.board-area-play {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    grid-template-rows: 35px auto;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.board-chosen-contract {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-transform: uppercase;
+    font-size: 1.5rem;
+}
+
+.reussite-game {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+   
+}
+
+.reussite-cards {
+    display: flex;
+    justify-content: space-around;
+    gap: 3px;
+}
+
+.reussite-card {
+    width: 20px;
+    height: 30px;
+    border: 1px solid #ccc;
+}
+
+.board-area-contracts {
+    display: flex;
+    justify-content: space-around;
+    gap: 8px;
+}
+
+.board-area-contracts .contract-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    border: solid 1px #0056b3;
+    padding: 5px 10px;
+    width: auto;
+
+    height: 40px;
+}
+
 
 .player {
     display: flex;
@@ -276,7 +343,12 @@ tr:nth-child(even) {
     justify-content: center;
     align-items: center;
     margin-top: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
+}
+
+.player-name {
+    color: #fff;
+    font-size: 16px;
 }
 
 .card-game {
@@ -297,12 +369,20 @@ tr:nth-child(even) {
     font-weight: bold;
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
     position: relative;
+    cursor: pointer;
+}
+
+.card.highlighted {
+    transform: translateY(-5px);
+    transition: transform 0.2s ease-in-out;
 }
 
 .card .suit {
     position: absolute;
-    top: 5px; /* Ajustez la position verticale selon vos besoins */
-    left: 5px; /* Ajustez la position horizontale selon vos besoins */
+    top: 5px;
+    /* Ajustez la position verticale selon vos besoins */
+    left: 5px;
+    /* Ajustez la position horizontale selon vos besoins */
     font-size: 18px;
     font-weight: bold;
 }
@@ -315,11 +395,7 @@ tr:nth-child(even) {
     color: black;
 }
 
-.player-name{
-    color: #fff;
-    font-size: 18px;
-    font-weight: bold;
-}
+
 
 /* Medias queries pour affichage tablette en orientation portrait */
 @media screen and (max-width: 768px) {

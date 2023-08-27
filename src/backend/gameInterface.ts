@@ -17,6 +17,7 @@ export interface Player {
     name: string;
     startedHand: Card[];
     myHandsDuringGame: Card[];
+    contractPlayed: Contract[] | null;
     socketId: string;
     score: number;
     isReady: boolean;
