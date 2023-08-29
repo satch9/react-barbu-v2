@@ -162,8 +162,13 @@ const Board: React.FC<BoardProps> = ({ roomsState, gameState, socketState }) => 
                             </div>
                         </>
                     );
+                }else{
+                    return (
+                        <>
+                        
+                        </>
+                    )
                 }
-                return null;
             })}
         </div>
     );
