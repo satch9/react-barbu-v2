@@ -9,6 +9,7 @@ export interface Room {
     roomId: string;
     name: string;
     players: Player[];
+    isGameInProgress: boolean;
     isPlaying: boolean;
     isFinished: boolean;
     winner: Player | null;

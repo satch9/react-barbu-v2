@@ -157,6 +157,7 @@ export class ServerSocket {
                     isDisconnected: false,
                 }],
                 isGameInProgress: false,
+                isPlaying: false,
                 isFinished: false,
                 winner: null,
                 currentContract: null,
@@ -269,14 +270,14 @@ export class ServerSocket {
             this.io.emit('gameStarted', true);
         });
 
-        socket.on('contract_choice', (index, playerContractChose) => {
-            console.log(`Contract choice received from => contract: ${index}`);
+        socket.on('contract_choice', (index, playerContractChoose) => {
+            console.log(`Contract choice received from ${playerContractChoose.name} => contract: ${index}`);
 
             const contractChosen: Contract = this.gameState.contracts[index];
             this.gameState.currentContract = contractChosen;
 
             this.gameState.players.forEach((player) => {
-                if (player.name === playerContractChose.name) {
+                if (player.name === playerContractChoose.name) {
                     player.contractPlayed?.push(contractChosen);
                 }
             });
@@ -290,41 +291,49 @@ export class ServerSocket {
 
             this.io.emit('gameState', this.gameState);
             this.io.emit('roomsState', this.roomsState);
-            this.io.emit('contractChosen', contractChosen);
+            //this.io.emit('contractChosen', contractChosen);
 
         })
 
         // Exemple de mise à jour dans socket.on('card_played')
-        socket.on('card_played', (card, playerCardClicked) => {
-            const newGameState = { ...this.gameState };
-            const newRoomsState = { ...this.roomsState };
+        socket.on('card_played', ({ cardClicked, playerClickedCards }) => {
 
-            newGameState.players = newGameState.players.map((player) => {
-                if (player.name === playerCardClicked.name) {
-                    const newPlayer = { ...player };
-                    newPlayer.myHandsDuringGame = [...newPlayer.myHandsDuringGame, card];
-                    newPlayer.startedHand = newPlayer.startedHand.filter((cardInHand) => cardInHand !== card);
-                    return newPlayer;
-                }
-                return player;
-            });
+            console.log("cardClicked", cardClicked)
 
-            newRoomsState.rooms = newRoomsState.rooms.map((room) => {
-                const newRoom = { ...room };
-                newRoom.players = newRoom.players.map((player) => {
-                    if (player.name === playerCardClicked.name) {
-                        const newPlayer = { ...player };
-                        newPlayer.myHandsDuringGame = [...newPlayer.myHandsDuringGame, card];
-                        newPlayer.startedHand = newPlayer.startedHand.filter((cardInHand) => cardInHand !== card);
-                        return newPlayer;
-                    }
-                    return player;
+            const playerIndex = this.gameState.players.findIndex((player) => player.name === playerClickedCards.name);
+            console.log("playerIndex", playerIndex)
+
+            if (playerIndex !== -1) {
+                console.log("if gamestate")
+                const newPlayer = { ...this.gameState.players[playerIndex] };
+                const cardIndex = newPlayer.startedHand.findIndex((card) => {
+                    console.log("card", card)
+                    console.log("cardClicked", cardClicked)
+                    return card.suit === cardClicked.suit && card.value === cardClicked.value
                 });
-                return newRoom;
+                console.log("cardIndex", cardIndex)
+                if (cardIndex !== -1) {
+                    newPlayer.startedHand.splice(cardIndex, 1);
+                    newPlayer.myHandsDuringGame = [...newPlayer.myHandsDuringGame, cardClicked];
+                    this.gameState.players[playerIndex] = newPlayer;
+                }
+            }
+
+            this.roomsState.rooms.forEach((room) => {
+                const roomPlayerIndex = room.players.findIndex((player) => player.name === playerClickedCards.name);
+                if (roomPlayerIndex !== -1) {
+                    const newRoomPlayer = { ...room.players[roomPlayerIndex] };
+                    const roomCardIndex = newRoomPlayer.startedHand.findIndex((card) => card.suit === cardClicked.suit && card.value === cardClicked.value);
+                    if (roomCardIndex !== -1) {
+                        newRoomPlayer.startedHand.splice(roomCardIndex, 1);
+                        newRoomPlayer.myHandsDuringGame = [...newRoomPlayer.myHandsDuringGame, cardClicked];
+                        room.players[roomPlayerIndex] = newRoomPlayer;
+                    }
+                }
             });
 
-            this.io.emit('gameState', newGameState);
-            this.io.emit('roomsState', newRoomsState);
+            this.io.emit('gameState', this.gameState);
+            this.io.emit('roomsState', this.roomsState);
         });
 
 

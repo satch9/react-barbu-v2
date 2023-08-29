@@ -37,8 +37,6 @@ const ListOfGames: React.FC<ListOfGamesProps> = ({ socketState, roomsState, setG
     const [roomIdJoinedGame, setRoomIdJoinedGame] = useState('');
     const [joinedRoom, setJoinedRoom] = useState<string[]>([]);
 
-
-
     console.log("screenWidth screenHeight", screenWidth, screenHeight)
 
     console.log("SocketState listofgames", socketState)

@@ -31,9 +31,9 @@ export const initialState: GameState = {
 export interface Player {
     uid: string;
     name: string;
-    startedHand: [],
-    myHandsDuringGame: [],
-    contractPlayed: [],
+    startedHand: Card[],
+    myHandsDuringGame: Card[],
+    contractPlayed: Contract[] | null;
     socketId: string;
     score: number;
     isReady: boolean;
@@ -46,7 +46,13 @@ export interface Player {
 export interface Contract {
     name: string;
     description: string;
-    value: number;
+    maxNumberOfTurns: number;
+    value: number | number[];
+}
+
+export interface Card {
+    suit: string;
+    value: string;
 }
 
 

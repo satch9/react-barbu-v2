@@ -43,6 +43,7 @@ export interface Room {
     name: string;
     players: Player[];
     isGameInProgress: boolean;
+    isPlaying: boolean;
     isFinished: boolean;
     winner: Player | null;
     currentContract: Contract | null;

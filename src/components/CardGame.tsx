@@ -1,3 +1,5 @@
+import React from 'react';
+
 type Card = {
     value: string;
     suit: string;

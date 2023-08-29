@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { RoomsState } from '../reducers/roomReducers'
-import { Player, GameState } from '../reducers/gameReducers';
+import { Card, Player, GameState } from '../reducers/gameReducers';
 import toast, { Toaster } from 'react-hot-toast';
 import { ISocketContextState } from '../reducers/socketReducers';
 import { useMediaQuery } from 'react-responsive';
@@ -56,27 +56,34 @@ const Board: React.FC<BoardProps> = ({ roomsState, gameState, socketState }) => 
         socketState.socket?.emit('contract_choice', index, player);
     }
 
-    const handleCardClicked = (card: string, player: Player) => {
+    const handleCardClicked = useCallback((card: Card | string, player: Player) => {
         console.log("clickedCards", clickedCards)
-        if (clickedCards.includes(card)) {
-            // La carte a déjà été cliquée, ajoutez-la à la div "boards-cards"
-            setClickedCards((prevClickedCards) => prevClickedCards.filter((c) => c !== card));
+        console.log("handleCardClicked", card)
+        console.log("handleCardClicked player", player)
+
+        const cardIdentifier = typeof card === 'string' ? card : card.suit + card.value;
+
+        if (clickedCards.includes(cardIdentifier)) {
+            // La carte a déjà été cliquée, retirez-la de la div "boards-cards"
+            console.log("1");
+            setClickedCards((prevClickedCards) => prevClickedCards.filter((c) => c !== cardIdentifier));
         } else {
+            console.log("2");
             // La carte n'a pas encore été cliquée, ajoutez-la à celles qui ont été cliquées
-            setClickedCards((prevClickedCards) => [...prevClickedCards, card]);
+            setClickedCards((prevClickedCards) => [...prevClickedCards, cardIdentifier]);
         }
 
-        socketState.socket?.emit('card_played', card, player);
-    }
+        socketState.socket?.emit('card_played', { cardClicked: card, playerClickedCards: player });
+    }, [clickedCards, setClickedCards, socketState.socket])
 
     return (
-        <div className={`board-container ${isMobile ? 'mobile' : 'desktop'}`}>
+        <div className={`board-container ${isMobile ? 'mobile' : 'desktop'}`} key={"board-container"}>
             <Toaster />
             {gameState.players.map((player, index) => {
                 if (player.socketId === socketState.socket?.id) {
                     return (
                         <>
-                            <div className="board-area-play">
+                            <div className="board-area-play" >
 
                                 {
                                     gameState.currentContract && (
@@ -90,11 +97,15 @@ const Board: React.FC<BoardProps> = ({ roomsState, gameState, socketState }) => 
                                     gameState.currentContract?.name !== "Réussite" && (
                                         <div className="board-cards">
                                             {
-                                                player.myHandsDuringGame.map((cardsPlayed, indexCardPlayed) => (
+                                                player.myHandsDuringGame.map((cardsPlayed: Card, indexCardPlayed: number) => (
                                                     <div key={indexCardPlayed} className="board-cards-played">
-                                                        {
-                                                            cardsPlayed
-                                                        }
+                                                        <div className="card">
+                                                            <span className={cardsPlayed.suit === '♥' || cardsPlayed.suit === '♦' ? 'suit card-red' : 'suit card-black'}>
+                                                                {cardsPlayed.suit}
+                                                            </span>
+                                                            <span>{cardsPlayed.value}</span>
+                                                        </div>
+
                                                     </div>
                                                 ))
                                             }
@@ -106,13 +117,13 @@ const Board: React.FC<BoardProps> = ({ roomsState, gameState, socketState }) => 
                                     gameState.currentContract?.name === "Réussite" && (
                                         <div className="reussite-game">
                                             {
-                                                gameState.players.map((player, index) => (
-                                                    <div key={index} className="reussite-player">
+                                                gameState.players.map((player, reussiteIndex) => (
+                                                    <div key={reussiteIndex} className="reussite-player">
                                                         {player.name}
                                                         <div className="reussite-cards">
-                                                            {Array(13).fill(null).map((card, cardIndex) => (
+                                                            {Array(13).fill(null).map((cardPlacement, cardIndex) => (
                                                                 <div key={cardIndex} className="reussite-card">
-                                                                    {card}
+                                                                    {cardPlacement}
                                                                 </div>))
                                                             }
                                                         </div>
@@ -127,12 +138,12 @@ const Board: React.FC<BoardProps> = ({ roomsState, gameState, socketState }) => 
                             <div className="player" key={index}>
 
                                 <div className="player-cards">
-                                    {player.startedHand.map((card, cardIndex) => (
+                                    {player.startedHand.map((cardStartedHand, cardStartedHandIndex) => (
                                         <CardGame
-                                            card={card}
-                                            key={cardIndex}
-                                            onClick={() => handleCardClicked(card, player)}
-                                            highlighted={clickedCards.includes(card)} />
+                                            card={cardStartedHand}
+                                            key={cardStartedHandIndex}
+                                            onClick={() => handleCardClicked(cardStartedHand, player)}
+                                            highlighted={clickedCards.includes(cardStartedHand.suit + cardStartedHand.value)} />
                                     ))}
                                 </div>
                                 <div className="player-name">{player.name}</div>
@@ -140,10 +151,10 @@ const Board: React.FC<BoardProps> = ({ roomsState, gameState, socketState }) => 
                             <div className="board-area-contracts">
                                 {
                                     gameState.currentPlayer.name === player.name && (
-                                        gameState.contracts.map((contract, index) => (
-                                            <div className="contract" key={index}>
+                                        gameState.contracts.map((contract, contractIndex) => (
+                                            <div className="contract" key={contractIndex}>
 
-                                                <button className="contract-button" onClick={() => handleContractChoice(index, player)}>{contract.name}</button>
+                                                <button className="contract-button" onClick={() => handleContractChoice(contractIndex, player)}>{contract.name}</button>
                                             </div>
                                         ))
                                     )
